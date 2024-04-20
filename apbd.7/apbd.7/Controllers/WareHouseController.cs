@@ -1,3 +1,4 @@
+using apbd._7.Repositories;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,19 +8,13 @@ namespace apbd._7.Controllers
     [ApiController]
     public class WareHouseController : ControllerBase
     {
-        private readonly IConfiguration _configuration;
-        private readonly IAnimalRepository _animalRepository;
+        private readonly IRepository _repository;
     
-        public WareHouseController(IConfiguration configuration, IAnimalRepository animalRepository)
+        public WareHouseController(IRepository repository)
         {
-            _configuration = configuration;
-            _animalRepository = animalRepository;
+            _repository = repository;
         }
         
-        [HttpGet]
-        public async Task<IActionResult> get()
-        {
-            
-        }
+        
     }
 }

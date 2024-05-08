@@ -1,3 +1,4 @@
+
 namespace apbd._7.Models.DTOs;
 
 public class WareHouseDTO

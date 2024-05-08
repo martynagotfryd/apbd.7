@@ -47,9 +47,9 @@ public class Repository : IRepository
         return res is not null;
     }
 
-    public async Task<int> DoesOrderExist(int idProduct, int amount, DateTime createdAt)
+    public async Task<int?> DoesOrderExist(int idProduct, int amount, DateTime createdAt)
     {
-        var query = "SELECT 1 FROM Order WHERE Order.IdProduct = @IdProduct AND Order.Amount = @Amount AND Order.CreatedAt < @CreatedAt";
+        var query = "SELECT IdOrder FROM [Order] o WHERE o.Amount = @Amount AND o.IdProduct = @IdProduct AND o.CreatedAt < @CreatedAt";
 
         await using SqlConnection connection = new SqlConnection(_configuration.GetConnectionString("Default"));
         await using SqlCommand command = new SqlCommand();
@@ -63,10 +63,8 @@ public class Repository : IRepository
         await connection.OpenAsync();
 
         var res = await command.ExecuteScalarAsync();
-
-        if (res is null) throw new Exception();
-
-        return Convert.ToInt32(res);
+        
+        return res != null ? (int?)res : null;
     }
 
     public async Task<bool> IsOrderCompleted(int idOrder)
@@ -89,16 +87,16 @@ public class Repository : IRepository
 
     public async Task UpgradeDate(int idOrder ,DateTime dateTime)
     {
-        var query = "UPGRADE Order SET FullfilledAt = @Date";
+        var query = "UPDATE [Order] SET FulfilledAt = @Date WHERE IdOrder = @IdOrder";
         
         await using SqlConnection connection = new SqlConnection(_configuration.GetConnectionString("Default"));
         await using SqlCommand command = new SqlCommand();
 
-        DateTime date = DateTime.Now;
 
         command.Connection = connection;
         command.CommandText = query;
         command.Parameters.AddWithValue("@Date", dateTime);
+        command.Parameters.AddWithValue("@IdOrder", idOrder);
 
         await connection.OpenAsync();
 
@@ -127,9 +125,9 @@ public class Repository : IRepository
     }
 
 
-    public async Task<int> AddProduct(WareHouseDTO wareHouseDto, double price)
+    public async Task<int> AddProduct(WareHouseDTO wareHouseDto, double price, int idOrder)
     {
-        var query = @"INSERT INTO Product_Warehouse VALUES (@IdProduct, @IdWareHouse, @Amount, @CreatedAt); 
+        var query = @"INSERT INTO Product_Warehouse VALUES (@IdWareHouse, @IdProduct, @IdOrder, @Amount, @Price ,@CreatedAt); 
                         SELECT @@IDENTITY AS ID";
 
         await using SqlConnection connection = new SqlConnection(_configuration.GetConnectionString("Default"));
@@ -141,6 +139,8 @@ public class Repository : IRepository
         command.Parameters.AddWithValue("@IdWareHouse", wareHouseDto.IdWareHouse);
         command.Parameters.AddWithValue("@Amount", wareHouseDto.Amount);
         command.Parameters.AddWithValue("@CreatedAt", wareHouseDto.CreatedAt);
+        command.Parameters.AddWithValue("@IdOrder", idOrder);
+        command.Parameters.AddWithValue("@Price", price);
 
         await connection.OpenAsync();
 

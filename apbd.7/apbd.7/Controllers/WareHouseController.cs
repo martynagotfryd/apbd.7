@@ -1,5 +1,6 @@
 using apbd._7.Models.DTOs;
 using apbd._7.Repositories;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace apbd._7.Controllers
@@ -27,33 +28,37 @@ namespace apbd._7.Controllers
             {
                 return NotFound("WareHouse not found");
             }
-
-            try 
-            {
-                var idOrder = await _repository.DoesOrderExist(wareHouseDto.IdProduct, wareHouseDto.Amount,wareHouseDto.CreatedAt);
-
-                if (await _repository.IsOrderCompleted(idOrder))
-                {
-                    return BadRequest("Order is completed");
-                }
-                try
-                {
-                    await _repository.UpgradeDate(idOrder, wareHouseDto.CreatedAt);
-                }
-                catch (Exception)
-                {
-                    return BadRequest();
-                }
-            }
-            catch (Exception)
+            
+            var idOrder = await _repository.DoesOrderExist(wareHouseDto.IdProduct, wareHouseDto.Amount,wareHouseDto.CreatedAt);
+            if (idOrder == null)
             {
                 return NotFound("Order not found");
+            }
+            Console.WriteLine("PATRZzzzzzzzzzzzzzzzzzzzz");
+
+            Console.WriteLine(idOrder);
+            if (await _repository.IsOrderCompleted(Convert.ToInt32(idOrder)))
+            {
+                return BadRequest("Order is completed");
+            }
+
+
+            try
+            {
+                await _repository.UpgradeDate(Convert.ToInt32(idOrder), wareHouseDto.CreatedAt);
+
+                
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+                throw;
             }
 
             double price = await _repository.CalculatePrice(wareHouseDto.IdProduct, wareHouseDto.Amount);
 
-            int id = await _repository.AddProduct(wareHouseDto, price);
-
+            int id = await _repository.AddProduct(wareHouseDto, price, Convert.ToInt32(idOrder));
+            
             return Created();
         } 
     }

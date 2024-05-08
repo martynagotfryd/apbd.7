@@ -1,6 +1,5 @@
 using apbd._7.Models.DTOs;
 using apbd._7.Repositories;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace apbd._7.Controllers
@@ -29,14 +28,33 @@ namespace apbd._7.Controllers
                 return NotFound("WareHouse not found");
             }
 
-            if (!await _repository.DoesOrderExist(wareHouseDto.IdProduct, wareHouseDto.CreatedAt))
+            try 
+            {
+                var idOrder = await _repository.DoesOrderExist(wareHouseDto.IdProduct, wareHouseDto.Amount,wareHouseDto.CreatedAt);
+
+                if (await _repository.IsOrderCompleted(idOrder))
+                {
+                    return BadRequest("Order is completed");
+                }
+                try
+                {
+                    await _repository.UpgradeDate(idOrder, wareHouseDto.CreatedAt);
+                }
+                catch (Exception)
+                {
+                    return BadRequest();
+                }
+            }
+            catch (Exception)
             {
                 return NotFound("Order not found");
             }
 
-            int id = await _repository.AddProduct(wareHouseDto);
+            double price = await _repository.CalculatePrice(wareHouseDto.IdProduct, wareHouseDto.Amount);
+
+            int id = await _repository.AddProduct(wareHouseDto, price);
 
             return Created();
-        }
+        } 
     }
 }

@@ -125,7 +125,7 @@ public class Repository : IRepository
     }
 
 
-    public async Task<int> AddProduct(WareHouseDTO wareHouseDto, double price, int idOrder)
+    public async Task<int> AddProduct(WareHouseDTO wareHouseDto, double price, int idOrder, DateTime dateTime)
     {
         var query = @"INSERT INTO Product_Warehouse VALUES (@IdWareHouse, @IdProduct, @IdOrder, @Amount, @Price ,@CreatedAt); 
                         SELECT @@IDENTITY AS ID";
@@ -138,7 +138,7 @@ public class Repository : IRepository
         command.Parameters.AddWithValue("@IdProduct", wareHouseDto.IdProduct);
         command.Parameters.AddWithValue("@IdWareHouse", wareHouseDto.IdWareHouse);
         command.Parameters.AddWithValue("@Amount", wareHouseDto.Amount);
-        command.Parameters.AddWithValue("@CreatedAt", wareHouseDto.CreatedAt);
+        command.Parameters.AddWithValue("@CreatedAt", dateTime);
         command.Parameters.AddWithValue("@IdOrder", idOrder);
         command.Parameters.AddWithValue("@Price", price);
 

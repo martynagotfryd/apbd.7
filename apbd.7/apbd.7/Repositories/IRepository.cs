@@ -10,5 +10,5 @@ public interface IRepository
     Task<bool> IsOrderCompleted(int idOrder);
     Task UpgradeDate(int idOrder, DateTime dateTime);
     Task<double> CalculatePrice(int idProduct, int amount);
-    Task<int> AddProduct(WareHouseDTO wareHouseDto, double price, int idOrder);
+    Task<int> AddProduct(WareHouseDTO wareHouseDto, double price, int idOrder, DateTime dateTime);
 }

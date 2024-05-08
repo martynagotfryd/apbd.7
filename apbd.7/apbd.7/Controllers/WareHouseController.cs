@@ -19,6 +19,8 @@ namespace apbd._7.Controllers
         [HttpPost]
         public async Task<IActionResult> AddProduct(WareHouseDTO wareHouseDto)
         {
+            DateTime dateTime = DateTime.Now;
+                
             if (!await _repository.DoesProductExist(wareHouseDto.IdProduct))
             {
                 return NotFound("Product not found");
@@ -29,7 +31,7 @@ namespace apbd._7.Controllers
                 return NotFound("WareHouse not found");
             }
             
-            var idOrder = await _repository.DoesOrderExist(wareHouseDto.IdProduct, wareHouseDto.Amount,wareHouseDto.CreatedAt);
+            var idOrder = await _repository.DoesOrderExist(wareHouseDto.IdProduct, wareHouseDto.Amount,dateTime);
             if (idOrder == null)
             {
                 return NotFound("Order not found");
@@ -45,7 +47,7 @@ namespace apbd._7.Controllers
 
             try
             {
-                await _repository.UpgradeDate(Convert.ToInt32(idOrder), wareHouseDto.CreatedAt);
+                await _repository.UpgradeDate(Convert.ToInt32(idOrder), dateTime);
 
                 
             }
@@ -57,7 +59,7 @@ namespace apbd._7.Controllers
 
             double price = await _repository.CalculatePrice(wareHouseDto.IdProduct, wareHouseDto.Amount);
 
-            int id = await _repository.AddProduct(wareHouseDto, price, Convert.ToInt32(idOrder));
+            int id = await _repository.AddProduct(wareHouseDto, price, Convert.ToInt32(idOrder), dateTime);
             
             return Created();
         } 

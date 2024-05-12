@@ -16,7 +16,7 @@ namespace apbd._7.Controllers
             _repository = repository;
         }
 
-        [HttpPost]
+        [HttpPost("Add")]
         public async Task<IActionResult> AddProduct(WareHouseDTO wareHouseDto)
         {
             DateTime dateTime = DateTime.Now;
@@ -60,8 +60,31 @@ namespace apbd._7.Controllers
             double price = await _repository.CalculatePrice(wareHouseDto.IdProduct, wareHouseDto.Amount);
 
             int id = await _repository.AddProduct(wareHouseDto, price, Convert.ToInt32(idOrder), dateTime);
+
+            return CreatedAtAction(nameof(GetProductWarehouseById), new { id }, null); 
+        }
+
+        [HttpPost("AddWithP")]
+        public async Task<IActionResult> AddProductWithProc(WareHouseDTO wareHouseDto)
+        {
+            await _repository.AddProcedure();
             
+            DateTime dateTime = DateTime.Now;
+            
+            await _repository.AddProductWithProc(wareHouseDto, dateTime);
+
             return Created();
-        } 
+        }
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetProductWarehouseById(int id)
+        {
+            var result = await _repository.GetById(id);
+            if (result == null)
+            {
+                return NotFound();
+            }
+            return Ok(result);
+        }
+       
     }
 }

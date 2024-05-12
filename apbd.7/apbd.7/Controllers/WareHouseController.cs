@@ -61,19 +61,21 @@ namespace apbd._7.Controllers
 
             int id = await _repository.AddProduct(wareHouseDto, price, Convert.ToInt32(idOrder), dateTime);
 
-            return CreatedAtAction(nameof(GetProductWarehouseById), new { id }, null); 
+            return CreatedAtAction(nameof(GetProductWarehouseById), new { id }, new { Id = id }); 
         }
 
         [HttpPost("AddWithP")]
         public async Task<IActionResult> AddProductWithProc(WareHouseDTO wareHouseDto)
         {
+            await _repository.DropProcedure();
             await _repository.AddProcedure();
             
             DateTime dateTime = DateTime.Now;
             
-            await _repository.AddProductWithProc(wareHouseDto, dateTime);
+            int id = await _repository.AddProductWithProc(wareHouseDto, dateTime);
 
-            return Created();
+            return CreatedAtAction(nameof(GetProductWarehouseById), new { id }, new { Id = id }); 
+
         }
         [HttpGet("{id}")]
         public async Task<IActionResult> GetProductWarehouseById(int id)

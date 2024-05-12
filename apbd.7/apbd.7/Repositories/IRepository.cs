@@ -11,7 +11,8 @@ public interface IRepository
     Task UpgradeDate(int idOrder, DateTime dateTime);
     Task<double> CalculatePrice(int idProduct, int amount);
     Task<int> AddProduct(WareHouseDTO wareHouseDto, double price, int idOrder, DateTime dateTime);
-    Task AddProductWithProc(WareHouseDTO wareHouseDto, DateTime dateTime);
+    Task<int> AddProductWithProc(WareHouseDTO wareHouseDto, DateTime dateTime);
     Task<int?> GetById(int id);
     Task AddProcedure();
+    Task DropProcedure();
 }

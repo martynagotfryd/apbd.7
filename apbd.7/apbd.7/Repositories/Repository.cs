@@ -151,9 +151,9 @@ public class Repository : IRepository
         return Convert.ToInt32(res);
     }
 
-    public async Task AddProductWithProc(WareHouseDTO wareHouseDto,  DateTime dateTime)
+    public async Task<int> AddProductWithProc(WareHouseDTO wareHouseDto,  DateTime dateTime)
     {
-        var query = @"EXEC AddProductToWarehouse @IdProduct = @IdProduct1, @IdWarehouse = @IdWareHouse1, @Amount = @Amount1, @CreatedAt = @CreatedAt1 ";
+        var query = @"EXEC AddProductToWarehouse @IdProduct = @IdProduct1, @IdWarehouse = @IdWareHouse1, @Amount = @Amount1, @CreatedAt = @CreatedAt1; SELECT @@IDENTITY AS ID ";
 
         await using SqlConnection connection = new SqlConnection(_configuration.GetConnectionString("Default"));
         await using SqlCommand command = new SqlCommand();
@@ -167,7 +167,11 @@ public class Repository : IRepository
  
         await connection.OpenAsync();
 
-        await command.ExecuteScalarAsync();
+        var res =  await command.ExecuteScalarAsync();
+        
+        if (res is null) throw new Exception();
+        
+        return Convert.ToInt32(res);
     }
 
     public async Task<int?> GetById(int id)
@@ -190,6 +194,21 @@ public class Repository : IRepository
     public async Task AddProcedure()
     {
         var query = "CREATE PROCEDURE AddProductToWarehouse @IdProduct INT, @IdWarehouse INT, @Amount INT,  \n@CreatedAt DATETIME\nAS  \nBEGIN  \n   \n DECLARE @IdProductFromDb INT, @IdOrder INT, @Price DECIMAL(5,2);  \n  \n SELECT TOP 1 @IdOrder = o.IdOrder  FROM \"Order\" o   \n LEFT JOIN Product_Warehouse pw ON o.IdOrder=pw.IdOrder  \n WHERE o.IdProduct=@IdProduct AND o.Amount=@Amount AND  \n o.CreatedAt<@CreatedAt;  \n  \n SELECT @IdProductFromDb=Product.IdProduct, @Price=Product.Price FROM Product WHERE IdProduct=@IdProduct  \n   \n IF @IdProductFromDb IS NULL  \n BEGIN  \n  RAISERROR('Invalid parameter: Provided IdProduct does not exist', 18, 0);  \n  RETURN;  \n END;  \n  \n IF @IdOrder IS NULL  \n BEGIN  \n  RAISERROR('Invalid parameter: There is no order to fullfill', 18, 0);  \n  RETURN;  \n END;  \n   \n IF NOT EXISTS(SELECT 1 FROM Warehouse WHERE IdWarehouse=@IdWarehouse)  \n BEGIN  \n  RAISERROR('Invalid parameter: Provided IdWarehouse does not exist', 18, 0);  \n  RETURN;  \n END;  \n  \n SET XACT_ABORT ON;  \n BEGIN TRAN;  \n   \n UPDATE [Order] SET  \n FulfilledAt=@CreatedAt  \n WHERE IdOrder=@IdOrder;  \n  \n INSERT INTO Product_Warehouse(IdWarehouse,   \n IdProduct, IdOrder, Amount, Price, CreatedAt)  \n VALUES(@IdWarehouse, @IdProduct, @IdOrder, @Amount, @Amount*@Price, @CreatedAt);  \n   \n SELECT @@IDENTITY AS NewId;\n   \n COMMIT;  \nEND; ";
+        
+        await using SqlConnection connection = new SqlConnection(_configuration.GetConnectionString("Default"));
+        await using SqlCommand command = new SqlCommand();
+
+        command.Connection = connection;
+        command.CommandText = query;
+ 
+        await connection.OpenAsync();
+
+        await command.ExecuteScalarAsync();
+    }
+
+    public async Task DropProcedure()
+    {
+        var query = "IF OBJECT_ID('AddProductToWarehouse', 'P') IS NOT NULL\nBEGIN\n    DROP PROCEDURE AddProductToWarehouse;\nEND";
         
         await using SqlConnection connection = new SqlConnection(_configuration.GetConnectionString("Default"));
         await using SqlCommand command = new SqlCommand();
